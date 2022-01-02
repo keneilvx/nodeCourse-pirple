@@ -17,8 +17,10 @@ let url = require('url')
 
      //get the method (GET, POST, DELETE, PUT)
      let method = req.method.toLowerCase()
+     let queryString =  parsedUrl.query
+
      //console log the request & method
-     console.log('request received on' , trimmedPath + 'this is method' + ' ' + method)
+     console.log('request received on' , trimmedPath + 'this is method' + ' ' + method + "The query string parameters are as follows: " + queryString)
  })
 
 //run the API on port 3000
