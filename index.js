@@ -15,8 +15,10 @@ let url = require('url')
      //trim the path
      let trimmedPath = path.replace(/^\.?\/?/, '')
 
-     //console log the request
-     console.log('request received on' , trimmedPath)
+     //get the method (GET, POST, DELETE, PUT)
+     let method = req.method.toLowerCase()
+     //console log the request & method
+     console.log('request received on' , trimmedPath + 'this is method' + ' ' + method)
  })
 
 //run the API on port 3000
