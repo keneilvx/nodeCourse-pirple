@@ -5,13 +5,15 @@ let url = require('url')
 
 
 //create server
- let server = http.createServer( function(res, req){
+ let server = http.createServer( function(req, res){
      res.end("hello World");
     //parse the URL
      let parsedUrl = url.parse(req.url, true)
 
+     //get the path name
+     let path = parsedUrl.pathname
      //trim the path
-     let trimmedPath = parsedUrl.replace(/^\.?\/?/, '')
+     let trimmedPath = path.replace(/^\.?\/?/, '')
 
      //console log the request
      console.log('request received on' , trimmedPath)
