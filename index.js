@@ -1,29 +1,125 @@
 
 //import dependencies
-let http = require('http')
-let url = require('url')
+const http = require('http')
+const https = require('https')
+const url = require('url')
+const StringDecoder = require('string_decoder').StringDecoder;
+const config = require('./config')
+var fs = require('fs')
+let _data = require('./lib/data')
+let handlers = equire('./lib/handlers')
 
+// @TODO
 
+// _data.create('test', 'newFile', function(err){
+//     console.log('this was the error', err)
+// })
+
+// _data.read('test', 'newFile', {'foo': 'bar'}, function(err, data ){
+//     console.log('this was the error', err, "and this is data")
+// })
+
+// _data.update('test', 'newFile', {'ffizz': 'bbuzz'}, function(err, data ){
+//     console.log('this was the error', err)
+// })
+
+_data.delete('test', 'newFile', function(err, data ){
+    console.log('this was the error', err)
+})
+
+//HTTP SERVER 
 //create server
- let server = http.createServer( function(req, res){
-     res.end("hello World");
+ let httpServer = http.createServer( function(req, res){
+    unifiedServer(req, res)
+ })
+
+
+httpServer.listen( config.httpPort, function (){
+    console.log("Server running on port " + config.httpPort + "enviroment is current" + config.envName)
+});
+
+let httpsServerOptions = {
+
+    'key': fs.readFileSync('./https/key.pem'),
+    'cert': fs.readFileSync('./https/cert.pem')
+
+};
+
+ //HTTPS SERVER 
+let httpsServer = https.createServer(httpsServerOptions, function(req, res){
+    unifiedServer(req, res)
+ })
+
+httpsServer.listen( config.httpsPort, function (){
+    console.log("Server running on port " + config.httpsPort + "enviroment is current " + config.envName)
+});
+
+let unifiedServer = (function(req,res){
+    res.end("hello World");
     //parse the URL
      let parsedUrl = url.parse(req.url, true)
 
      //get the path name
      let path = parsedUrl.pathname
+
      //trim the path
      let trimmedPath = path.replace(/^\.?\/?/, '')
+
+     let chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound
+
+     let data = {
+         'trimmed Path': trimmedPath,
+
+     }
+
+     chosenHandler(data , function(statusCode, payload){
+        statusCode = typeof(statusCode) == 'number' ? statusCode : 200
+
+         payload = typeof(payload) == 'object' ? payload : {}
+
+         let payloadString = JSON.stringify(payload)
+        
+         //formats to JSON 
+         res.setHeader('Content-Type', 'application/json')
+         //Return the response 
+         res.writeHead(statusCode)
+
+         res.end(payloadString)
+
+         console.log ('returning the response ', statusCode , payloadString)
+     })
 
      //get the method (GET, POST, DELETE, PUT)
      let method = req.method.toLowerCase()
      let queryString =  parsedUrl.query
 
-     //console log the request & method
-     console.log('request received on' , trimmedPath + 'this is method' + ' ' + method + "The query string parameters are as follows: " + queryString)
- })
+     let headers = req.headers
+     const decoder = new StringDecoder('utf8');
+     let buffer = ''
 
-//run the API on port 3000
-server.listen( 3000, function (){
-    console.log("Server running on port 3000")
-});
+     //Will be triggered if data is in the request
+     req.on('data', function (data){
+         buffer += decoder.write(data)
+     })
+
+     //Will get call everytime
+     req.on('end', function (){
+        buffer += decoder.end()
+
+         //console log the request & method
+         //console.log('request received on' , trimmedPath + 'this is method' + ' ' + method + "The query string parameters are as follows: " );
+
+         //console log the headers
+         //console.log('headers', headers)s
+        // console.dir(queryString);
+     })
+
+
+})
+
+ 
+let router = {
+    'sample' : handlers.sample,
+    'ping': handlers.ping,
+    'handlers': handlers.user 
+}
