@@ -5,9 +5,10 @@ const https = require('https')
 const url = require('url')
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./lib/config')
-var fs = require('fs')
+const fs = require('fs')
 let _data = require('./lib/data')
 let handlers = require('./lib/handlers')
+let helpers = require('./lib/helpers')
 
 // @TODO
 
@@ -66,8 +67,19 @@ let unifiedServer = (function(req,res){
      let queryStringObject = parsedUrl.query
 
      let chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound
+    let method = req.method.toLowerCase()
+    let queryString =  parsedUrl.query
 
-     let data = {
+    let headers = req.headers
+    const decoder = new StringDecoder('utf8');
+    let buffer = ''
+
+    //Will be triggered if data is in the request
+    req.on('data', function (data){
+        buffer += decoder.write(data)
+    })
+
+    let data = {
          'trimmed Path': trimmedPath,
         'queryStringObject':queryStringObject,
         //'method': method,
@@ -83,10 +95,10 @@ let unifiedServer = (function(req,res){
          payload = typeof(payload) == 'object' ? payload : {}
 
          let payloadString = JSON.stringify(payload)
-        
-         //formats to JSON 
+
+         //formats to JSON
          res.setHeader('Content-Type', 'application/json')
-         //Return the response 
+         //Return the response
          res.writeHead(statusCode)
 
          res.end(payloadString)
@@ -95,17 +107,6 @@ let unifiedServer = (function(req,res){
      })
 
      //get the method (GET, POST, DELETE, PUT)
-     let method = req.method.toLowerCase()
-     let queryString =  parsedUrl.query
-
-     let headers = req.headers
-     const decoder = new StringDecoder('utf8');
-     let buffer = ''
-
-     //Will be triggered if data is in the request
-     req.on('data', function (data){
-         buffer += decoder.write(data)
-     })
 
      //Will get call everytime
      req.on('end', function (){
@@ -126,7 +127,8 @@ let unifiedServer = (function(req,res){
 let router = {
     'sample' : handlers.sample,
     'ping': handlers.ping,
-    'handlers': handlers.user ,
-    'tokens': handlers.token
+    'handlers': handlers.users ,
+    'tokens': handlers.tokens,
+    'checks': handlers.checks
 
 }
