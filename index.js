@@ -4,10 +4,10 @@ const http = require('http')
 const https = require('https')
 const url = require('url')
 const StringDecoder = require('string_decoder').StringDecoder;
-const config = require('./config')
+const config = require('./lib/config')
 var fs = require('fs')
 let _data = require('./lib/data')
-let handlers = equire('./lib/handlers')
+let handlers = require('./lib/handlers')
 
 // @TODO
 
@@ -19,14 +19,12 @@ let handlers = equire('./lib/handlers')
 //     console.log('this was the error', err, "and this is data")
 // })
 
+
 // _data.update('test', 'newFile', {'ffizz': 'bbuzz'}, function(err, data ){
-//     console.log('this was the error', err)
+//     consolse.log('this was the error', err)
 // })
 
-_data.delete('test', 'newFile', function(err, data ){
-    console.log('this was the error', err)
-})
-
+// 
 //HTTP SERVER 
 //create server
  let httpServer = http.createServer( function(req, res){
@@ -65,10 +63,17 @@ let unifiedServer = (function(req,res){
      //trim the path
      let trimmedPath = path.replace(/^\.?\/?/, '')
 
+     let queryStringObject = parsedUrl.query
+
      let chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound
 
      let data = {
          'trimmed Path': trimmedPath,
+        'queryStringObject':queryStringObject,
+        //'method': method,
+        'headers': headers,
+        // 'payload': payload,
+        'payload': helpers.parseJsonToObject(buffer)
 
      }
 
@@ -121,5 +126,7 @@ let unifiedServer = (function(req,res){
 let router = {
     'sample' : handlers.sample,
     'ping': handlers.ping,
-    'handlers': handlers.user 
+    'handlers': handlers.user ,
+    'tokens': handlers.token
+
 }
